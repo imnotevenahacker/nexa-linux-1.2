@@ -1,0 +1,25 @@
+#!/bin/sh
+set -eu
+# Debian 13 (Trixie) hybrid live USB; optimized squashfs for faster builds.
+# Compression zstd level 3 trades a somewhat bigger ISO for faster creation.
+# No blanket 'all devices' or guaranteed secure-boot compatibility claim.
+lb config noauto \
+  --mode debian \
+  --distribution trixie \
+  --architectures amd64 \
+  --binary-images iso-hybrid \
+  --archive-areas "main contrib non-free non-free-firmware" \
+  --debian-installer none \
+  --uefi-secure-boot auto \
+  --bootappend-live "boot=live components quiet splash username=nexa locales=en_US.UTF-8 keyboard-layouts=us" \
+  --iso-application "Nexa Linux 1.2 Preview" \
+  --iso-publisher "Nexa Linux community (unofficial Debian derivative)" \
+  --iso-volume "NEXA_LINUX_12" \
+  --image-name "nexa-linux-1.2-amd64" \
+  --chroot-squashfs-compression-type zstd \
+  --chroot-squashfs-compression-level 3 \
+  --cache true \
+  --cache-packages true \
+  --apt-recommends false \
+  --apt-indices false \
+  "${@}"

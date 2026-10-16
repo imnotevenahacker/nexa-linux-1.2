@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Install Nexa Linux
+Name[fa]=نصب Nexa Linux
+GenericName=Graphical System Installer
+Comment=Installer for Nexa live environment (Calamares)
+Exec=calamares-install-debian
+Icon=install-debian
+Terminal=false
+Categories=Qt;System;
+StartupWMClass=calamares
+StartupNotify=true

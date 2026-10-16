@@ -1,0 +1,187 @@
+#!/usr/bin/env python3
+"""Nexa Hub desktop launcher and appearance manager. Runs natively on KDE Plasma 6."""
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import (QApplication, QFileDialog, QFrame, QGridLayout,
+    QHBoxLayout, QLabel, QMainWindow, QMessageBox, QPushButton, QScrollArea,
+    QVBoxLayout, QWidget, QLineEdit)
+from PyQt6.QtGui import QIcon
+
+BG = Path('/usr/share/backgrounds/nexa')
+
+# (category, name, text, executable, icon name)
+PROGRAMS = [
+ ('Internet','Firefox', 'Real browser with extensions', 'firefox-esr', 'internet-web-browser'),
+ ('Internet','Mail', 'Thunderbird email', 'thunderbird', 'internet-mail'),
+ ('Internet','Remote desktop', 'Remmina remote desktop', 'remmina', 'preferences-desktop-remote-desktop'),
+ ('Internet','Downloads', 'Transmission torrent client', 'transmission-qt', 'folder-download'),
+ ('Documents','Files', 'Dolphin file manager', 'dolphin', 'system-file-manager'),
+ ('Documents','PDF & e-books', 'Okular document reader', 'okular', 'application-pdf'),
+ ('Documents','Office', 'LibreOffice suite', 'libreoffice', 'x-office-document'),
+ ('Documents','Text editor', 'Kate advanced editor', 'kate', 'accessories-text-editor'),
+ ('Documents','Archives', 'Ark: ZIP and 7z', 'ark', 'package-x-generic'),
+ ('Media','Photos', 'Gwenview image viewer', 'gwenview', 'image-x-generic'),
+ ('Media','Video', 'VLC video player', 'vlc', 'video-x-generic'),
+ ('Media','Painting', 'Krita digital studio', 'krita', 'applications-graphics'),
+ ('Media','Drawing', 'GIMP image editor', 'gimp', 'applications-graphics'),
+ ('Media','Recording', 'OBS Studio screen recorder', 'obs', 'camera-video'),
+ ('Utilities','Terminal', 'Real Linux shell', 'konsole', 'utilities-terminal'),
+ ('Utilities','Calculator', 'KCalc', 'kcalc', 'accessories-calculator'),
+ ('Utilities','Screenshot', 'Spectacle screenshots', 'spectacle', 'camera-photo'),
+ ('Utilities','Software store', 'Discover apps and updates', 'plasma-discover', 'system-software-install'),
+ ('Utilities','System monitor', 'CPU, memory and processes', 'plasma-systemmonitor', 'utilities-system-monitor'),
+ ('Utilities','Settings', 'Full desktop personalization', 'systemsettings', 'preferences-system'),
+ ('Utilities','Bluetooth', 'Bluetooth device setup', 'bluedevil-wizard', 'bluetooth'),
+ ('Utilities','Phone connect', 'KDE Connect', 'kdeconnect-app', 'phone'),
+ ('Games','Mines', 'Minesweeper classic', 'kmines', 'applications-games'),
+ ('Games','Solitaire', 'KPat solitaire', 'kpat', 'applications-games'),
+ ('Games','Sudoku', 'KSudoku puzzles', 'ksudoku', 'applications-games'),
+ ('Games','Mahjongg', 'Tile matching', 'kmahjongg', 'applications-games'),
+ ('Games','Platformer', 'SuperTux', 'supertux2', 'applications-games'),
+ ('Games','Racing', 'SuperTuxKart', 'supertuxkart', 'applications-games'),
+ ('System','Password manager', 'KeePassXC secure vault', 'keepassxc', 'dialog-password'),
+ ('System','Printer', 'Print and scanning setup', 'system-config-printer', 'printer'),
+ ('System','Nexa Diagnostics', 'Hardware and system health (local)', 'nexa-diagnose', 'utilities-system-monitor'),
+ ('Utilities','Window settings', 'Change desktop behavior and shortcuts', 'systemsettings', 'preferences-system-windows'),
+]
+
+class Hub(QMainWindow):
+ def __init__(self):
+  super().__init__()
+  self.setWindowTitle('Nexa Hub — One place for everything')
+  self.resize(1120, 730)
+  self.setMinimumSize(740, 510)
+  self.setWindowIcon(QIcon('/usr/share/icons/hicolor/scalable/apps/nexa.svg'))
+  self.setStyleSheet('''
+ QMainWindow,QScrollArea,QWidget#base {background:#0b1020;}
+ QLabel{color:#ecf2ff;font-family:"Noto Sans",sans-serif;}
+ QLabel#hero{font-size:31px;font-weight:800;color:#f7fbff;}
+ QLabel#subtitle{font-size:13px;color:#9aafd1;}
+ QLabel#section{font-size:18px;font-weight:750;}
+ QFrame#tile{background:#151d35;border:1px solid #2a3558;border-radius:17px;}
+ QLabel#name{font-size:15px;font-weight:700;}
+ QLabel#description{font-size:11px;color:#a5b3ca;}
+ QPushButton{background:#27458d;color:white;border:1px solid #3a59a1;
+  border-radius:11px;padding:10px 15px;font-weight:650;}
+ QPushButton:hover{background:#3a60b1;}
+ QPushButton#accent{background:#684dcb;border:1px solid #7f66e3;}
+ QLineEdit{background:#19213a;color:white;border:1px solid #344261;
+  border-radius:12px;padding:12px;font-size:14px;}
+ ''')
+  scroll=QScrollArea();scroll.setWidgetResizable(True)
+  base=QWidget();base.setObjectName('base')
+  lay=QVBoxLayout(base);lay.setContentsMargins(28,24,28,28);lay.setSpacing(16)
+  top=QHBoxLayout();left=QVBoxLayout();name=QLabel('✦  Nexa Hub');name.setObjectName('hero')
+  left.addWidget(name);sub=QLabel('Your Linux. Your style. Your space.')
+  sub.setObjectName('subtitle');left.addWidget(sub);top.addLayout(left)
+  top.addStretch()
+  for text,fn in [('🔒 Lock',lambda:self.launch('loginctl','lock-session')),
+                  ('⚙ Settings',lambda:self.launch('systemsettings'))]:
+   b=QPushButton(text);b.clicked.connect(fn);top.addWidget(b)
+  lay.addLayout(top)
+  try:
+   is_live = 'boot=live' in Path('/proc/cmdline').read_text()
+  except OSError:
+   is_live = False
+  if is_live and shutil.which('calamares-install-debian'):
+   ib=QPushButton('💿 Install Nexa Linux (Calamares)')
+   ib.clicked.connect(lambda:self.launch('calamares-install-debian'))
+   lay.addWidget(ib)
+  note=QLabel('Nexa 1.2 Preview  •  Built with Debian 13 + KDE Plasma 6  •  Open-source applications')
+  note.setObjectName('subtitle');lay.addWidget(note)
+  banner=QFrame();banner.setObjectName('tile');bv=QVBoxLayout(banner)
+  t=QLabel('🎨  Make it yours');t.setObjectName('section');bv.addWidget(t)
+  row=QHBoxLayout()
+  buttons=[('🌌 Nexa Night',lambda:self.wallpaper(str(BG/'nexa-night.png'))),
+           ('☀ Nexa Day',lambda:self.wallpaper(str(BG/'nexa-day.png'))),
+           ('🖼 Choose image',self.custom_wallpaper),
+           ('🌙 Dark',lambda:self.theme('org.kde.breezedark.desktop')),
+           ('☀ Light',lambda:self.theme('org.kde.breeze.desktop'))]
+  for text,fn in buttons:
+   b=QPushButton(text);b.clicked.connect(fn);row.addWidget(b)
+  bv.addLayout(row);lay.addWidget(banner)
+  heading=QHBoxLayout();sect=QLabel('Explore your apps');sect.setObjectName('section')
+  heading.addWidget(sect);heading.addStretch()
+  self.search=QLineEdit();self.search.setPlaceholderText('Search apps or categories…')
+  self.search.setMaximumWidth(350);self.search.textChanged.connect(self.render_apps)
+  heading.addWidget(self.search);lay.addLayout(heading)
+  self.apparea=QWidget();self.appslayout=QVBoxLayout(self.apparea)
+  self.appslayout.setContentsMargins(0,0,0,0);self.appslayout.setSpacing(14)
+  lay.addWidget(self.apparea)
+  bottom=QHBoxLayout()
+  for name,fn in [('🔄 Updates',self.updates),('📊 System monitor',lambda:self.launch('plasma-systemmonitor')),
+                  ('💻 Open terminal',lambda:self.launch('konsole'))]:
+   b=QPushButton(name);b.setObjectName('accent');b.clicked.connect(fn);bottom.addWidget(b)
+  lay.addLayout(bottom)
+  health=QFrame();health.setObjectName('tile');hv=QHBoxLayout(health)
+  hv.addWidget(QLabel('🩺  System tools'))
+  for label, cmd in [('Diagnostics','nexa-diagnose'),('Network settings','systemsettings'),('PDF reader','okular')]:
+   b=QPushButton(label);b.clicked.connect(lambda _=False,c=cmd:self.launch('konsole','-e','bash','-lc','nexa-diagnose; echo; read -r -p \"Press Enter to close...\"') if c=='nexa-diagnose' else self.launch(c));hv.addWidget(b)
+  lay.addWidget(health)
+  self.render_apps()
+  lay.addStretch()
+  scroll.setWidget(base);self.setCentralWidget(scroll)
+
+ def render_apps(self,*_):
+  while self.appslayout.count():
+   item=self.appslayout.takeAt(0)
+   if item.widget(): item.widget().deleteLater()
+   elif item.layout(): self.clear_layout(item.layout())
+  filt=self.search.text().casefold().strip()
+  selected=[p for p in PROGRAMS if shutil.which(p[3]) and filt in (' '.join(p[:3])).casefold()]
+  categories=list(dict.fromkeys(p[0] for p in selected))
+  for category in categories:
+   label=QLabel(category);label.setObjectName('section');self.appslayout.addWidget(label)
+   gridwidget=QWidget();grid=QGridLayout(gridwidget);grid.setSpacing(11);grid.setContentsMargins(0,0,0,0)
+   items=[p for p in selected if p[0]==category]
+   for i,(_,title,desc,cmd,icon) in enumerate(items):
+    tile=QFrame();tile.setObjectName('tile');tile.setMinimumHeight(112)
+    v=QVBoxLayout(tile);v.setContentsMargins(15,13,15,13)
+    lbl=QLabel(title);lbl.setObjectName('name');v.addWidget(lbl)
+    dt=QLabel(desc);dt.setObjectName('description');dt.setWordWrap(True);v.addWidget(dt)
+    btn=QPushButton('Open  →');btn.clicked.connect(lambda _=False,c=cmd:self.launch(c));v.addWidget(btn)
+    grid.addWidget(tile,i//4,i%4)
+   self.appslayout.addWidget(gridwidget)
+  if not selected:
+   hint=QLabel('No installed apps match. Use Discover to find more apps.')
+   hint.setObjectName('subtitle');self.appslayout.addWidget(hint)
+
+ def clear_layout(self,layout):
+  while layout.count():
+   item=layout.takeAt(0)
+   if item.widget():item.widget().deleteLater()
+   if item.layout():self.clear_layout(item.layout())
+
+ def launch(self,*command):
+  if command == ('nexa-diagnose',):
+   command=('konsole','-e','bash','-lc','nexa-diagnose; echo; read -r -p \"Press Enter to close...\"')
+  try:
+   subprocess.Popen(list(command),start_new_session=True)
+  except (FileNotFoundError,PermissionError,OSError) as e:
+   QMessageBox.warning(self,'Could not launch',str(e))
+
+ def wallpaper(self,path):
+  try:
+   subprocess.run(['plasma-apply-wallpaperimage',path],timeout=20,check=True)
+  except Exception as e: QMessageBox.warning(self,'Wallpaper',str(e))
+
+ def custom_wallpaper(self):
+  file,_=QFileDialog.getOpenFileName(self,'Choose your wallpaper',str(Path.home()),
+    'Images (*.png *.jpg *.jpeg *.bmp *.webp);;All Files (*)')
+  if file:self.wallpaper(file)
+
+ def theme(self,theme):
+  try:
+   subprocess.run(['plasma-apply-lookandfeel','-a',theme],timeout=20,check=True)
+  except Exception as e: QMessageBox.warning(self,'Theme',str(e))
+
+ def updates(self):
+  self.launch('konsole','-e','bash','-lc',
+      'sudo apt update && sudo apt upgrade; echo; read -r -p "Press Enter to exit..."')
+
+if __name__=='__main__':
+ app=QApplication(sys.argv)
+ ui=Hub();ui.show();sys.exit(app.exec())

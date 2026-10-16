@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Nexa Diagnostics
+Comment=Show local system health and hardware information
+Exec=konsole -e bash -lc "nexa-diagnose; echo; read -r"
+Icon=utilities-system-monitor
+Categories=System;Utility;
+Terminal=false

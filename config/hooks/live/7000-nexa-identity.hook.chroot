@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+printf 'nexa\n' > /etc/hostname
+printf 'Nexa Linux 1.0 (Debian-based) \n \l\n' > /etc/issue
+chmod 0755 /etc/skel/Desktop/*.desktop 2>/dev/null || true
+# Preserve Debian's /etc/os-release and apt repository keys for package compatibility.
+# Calamares uses its own account/password screens; no preset credentials.
+# Never repartition or alter bootloaders from a build hook.

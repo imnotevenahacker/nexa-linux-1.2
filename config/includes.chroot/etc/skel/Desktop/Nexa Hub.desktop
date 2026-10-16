@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Nexa Hub
+Exec=nexa-hub
+Icon=nexa
+Terminal=false
+Categories=Settings;Utility;

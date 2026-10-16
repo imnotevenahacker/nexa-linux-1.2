@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Nexa Hub
+Name[fa]=مرکز Nexa
+Comment=Your Nexa control center
+Exec=nexa-hub
+Icon=nexa
+Terminal=false
+Categories=Settings;Utility;
+StartupNotify=true

@@ -1,0 +1,6 @@
+NAME="Nexa Linux"
+VERSION="1.2 Preview"
+VERSION_ID="1.2"
+ID=nexa
+ID_LIKE=debian
+NOTE="Unofficial Debian 13 remix; installation remains untested"

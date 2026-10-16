@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+# Must run Debian's supported Calamares wrapper, not a custom partitioning script.
+if [[ ! -d /run/live || ! -e /run/live/medium ]]; then
+  if ! grep -q 'boot=live' /proc/cmdline; then
+    echo 'Nexa Installer is only available in a live session.' >&2; exit 1
+  fi
+fi
+exec /usr/bin/calamares-install-debian "$@"

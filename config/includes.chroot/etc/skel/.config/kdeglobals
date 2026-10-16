@@ -1,0 +1,8 @@
+[General]
+ColorScheme=BreezeDark
+[Icons]
+Theme=breeze-dark
+[KDE]
+SingleClick=false
+[WM]
+activeBackground=49,63,112

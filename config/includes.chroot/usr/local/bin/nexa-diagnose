@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Minimal local-only troubleshooting; intentionally never uploads data.
+set -u
+printf 'Nexa Diagnostics (local only)\n=============================\n'
+printf '\nSystem: '; uname -srmo
+printf '\nRelease:\n'; cat /etc/nexa-release 2>/dev/null || true
+printf '\nRAM:\n'; free -h 2>/dev/null || true
+printf '\nDisk:\n'; df -h / 2>/dev/null || true
+printf '\nNetwork interfaces:\n'; ip -brief link 2>/dev/null || true
+printf '\nGPU:\n'; (command -v lspci >/dev/null && lspci | grep -Ei 'VGA|3D|Display') || true
+printf '\nSession:\n'; printf 'XDG_SESSION_TYPE=%s\n' "${XDG_SESSION_TYPE:-unknown}"
+printf '\nTip: run systemsettings for device configuration.\n'

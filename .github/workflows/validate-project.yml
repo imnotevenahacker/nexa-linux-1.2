@@ -1,0 +1,20 @@
+name: Validate Nexa source and website
+on:
+  push:
+  pull_request:
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check shell and Python source
+        run: python3 tests/check_project.py
+      - name: Check public web page
+        run: python3 tests/check_global.py
+          python3 tests/check_fast.py
+      - name: Make sure scripts parse
+        run: |
+          bash -n build.sh clean.sh scripts/*.sh
+          node --check docs/app.js

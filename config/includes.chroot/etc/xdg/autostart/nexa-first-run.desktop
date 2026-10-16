@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Nexa First Run
+Exec=nexa-first-run
+NoDisplay=true
+OnlyShowIn=KDE;
+X-KDE-autostart-phase=2

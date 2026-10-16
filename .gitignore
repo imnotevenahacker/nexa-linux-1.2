@@ -1,0 +1,15 @@
+# generated live-build cache and artifacts
+.cache/
+cache/
+chroot/
+binary/
+*.iso
+*.img
+*.sha256
+build-*.log
+config/binary
+config/bootstrap
+config/chroot
+config/common
+config/source
+config/package-lists/90-nexa-profile.list.chroot

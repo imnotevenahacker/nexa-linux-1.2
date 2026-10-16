@@ -1,0 +1,29 @@
+# Standard - multimedia, productivity and creative tools
+libreoffice
+libreoffice-plasma
+vlc
+ffmpeg
+ffmpegthumbs
+krita
+gimp
+inkscape
+kolourpaint
+okular-extra-backends
+thunderbird
+transmission-qt
+filezilla
+remmina
+krdc
+keepassxc
+cups
+system-config-printer
+simple-scan
+kdeconnect
+kmahjongg
+kbreakout
+supertux
+supertuxkart
+
+# Nexa 1.2: extra local-first productivity
+filelight
+btop

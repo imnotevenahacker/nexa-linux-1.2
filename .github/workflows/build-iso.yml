@@ -1,0 +1,81 @@
+name: Build Nexa Linux ISO (Fast)
+on:
+  workflow_dispatch:
+    inputs:
+      edition:
+        description: 'Build lite FIRST; standard/ultimate only after a tested lite run'
+        required: true
+        type: choice
+        default: lite
+        options:
+          - lite
+          - standard
+          - ultimate
+jobs:
+  iso:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    concurrency:
+      group: nexa-iso-${{ github.ref }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify source in seconds
+        run: |
+          python3 tests/check_project.py
+          python3 tests/check_global.py
+          python3 tests/check_fast.py
+          bash -n build.sh scripts/*.sh auto/config
+      - name: Show available storage
+        run: df -h .
+      - name: Free known large runner directories
+        run: |
+          sudo rm -rf /usr/local/lib/android /opt/hostedtoolcache /usr/share/dotnet || true
+          df -h .
+      - name: Build in Debian 13 and save full diagnostics
+        env:
+          NEXA_EDITION: ${{ inputs.edition }}
+        run: |
+          set -o pipefail
+          # Do not execute ./build.sh directly: GitHub checkouts may lose executable bit.
+          # Capture the *entire* container output and attach it even on failure.
+          docker run --rm --privileged \
+            -e NEXA_EDITION \
+            -v "${GITHUB_WORKSPACE}:/work" -w /work \
+            debian:trixie bash scripts/ci-build.sh 2>&1 | tee ci-build.log
+      - name: Diagnose failures clearly
+        if: failure()
+        run: |
+          echo '### Nexa build failed. See uploaded logs below.' >> "$GITHUB_STEP_SUMMARY"
+          for f in preflight-resolver.log build-*.log ci-build.log; do
+            if test -f "$f"; then
+              echo "#### Last 50 lines: $f" >> "$GITHUB_STEP_SUMMARY"
+              echo '```text' >> "$GITHUB_STEP_SUMMARY"
+              tail -50 "$f" >> "$GITHUB_STEP_SUMMARY"
+              echo '```' >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done
+      - name: Upload ISO and checksum (on success only)
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Nexa-Linux-1.2-${{ inputs.edition }}-amd64-UNTESTED
+          path: |
+            *.iso
+            *.iso.sha256
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload build logs (even on failure)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Nexa-Linux-1.2-${{ inputs.edition }}-logs
+          path: |
+            ci-build.log
+            preflight-resolver.log
+            build-*.log
+          if-no-files-found: warn
+          retention-days: 7

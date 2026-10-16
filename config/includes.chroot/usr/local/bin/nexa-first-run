@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -u
+stamp="${XDG_CONFIG_HOME:-$HOME/.config}/nexa/first-login-complete"
+[[ -e "$stamp" ]] && exit 0
+mkdir -p "$(dirname "$stamp")"
+# Wait for KDE to register its session bus service, without blocking login indefinitely.
+for i in $(seq 1 15); do
+  pgrep -u "$(id -u)" -x plasmashell >/dev/null && break
+  sleep 1
+done
+command -v plasma-apply-lookandfeel >/dev/null && plasma-apply-lookandfeel -a org.kde.breezedark.desktop >/dev/null 2>&1 || true
+command -v plasma-apply-wallpaperimage >/dev/null && plasma-apply-wallpaperimage /usr/share/backgrounds/nexa/nexa-night.png >/dev/null 2>&1 || true
+if command -v dbus-send >/dev/null && [[ -r /usr/share/nexa/panel-layout.js ]]; then
+  dbus-send --session --type=method_call --dest=org.kde.plasmashell \
+    /PlasmaShell org.kde.PlasmaShell.evaluateScript \
+    "string:$(cat /usr/share/nexa/panel-layout.js)" >/dev/null 2>&1 || true
+fi
+# Do not repeatedly overwrite a person's wallpaper/panel.
+touch "$stamp"
